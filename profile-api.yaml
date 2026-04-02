@@ -1,0 +1,846 @@
+openapi: 3.0.0
+info:
+  title: FinalScout Profile APIs Reference
+  description: |
+    # Introduction
+    Visit this page to get your API key, set whitelist IP: [https://finalscout.com/app/api/settings](https://finalscout.com/app/api/settings).
+
+    FinalScout APIs permission is available to select plans. Please visit this page for latest info: [https://finalscout.com/plans](https://finalscout.com/plans). If you need test credits or increase your rate limits, please contact us via the online chat or email us at [dev@finalscout.com](mailto:dev@finalscout.com).
+
+    ## About this reference
+    This API reference covers **LinkedIn profile retrieval** only (person and company profiles via the Profile endpoints below). For **other FinalScout APIs**, see the full documentation: [https://finalscout.com/public/doc/api.html](https://finalscout.com/public/doc/api.html).
+
+    ## API cost
+    The standard rate is **0.5 credit** per person profile (`POST /v1/profile/person`) and per company profile (`POST /v1/profile/company`). If your account has a custom rate agreed with FinalScout, that custom rate is applied instead of the standard rate. Successful responses include `credits_consumed` and `credits_available` so you can verify usage.
+
+    The person profile endpoint (`POST /v1/profile/person`) accepts an optional `extended` parameter (default `false`). When `extended` is `false`, a **basic** LinkedIn person profile is returned at a lower credit cost. When `extended` is `true`, the **full** LinkedIn person profile is returned at the standard rate. Contact your account manager for detailed pricing.
+    ## Revision History
+    Version | Date | Notes
+    --- | --- | ---
+    1.6.0 | 2026-04-02 | Added `extended` parameter (default `false`) to `POST /v1/profile/person`. When `false`, returns a basic LinkedIn person profile at a lower credit cost; when `true`, returns the full LinkedIn person profile. Contact your account manager for pricing details.
+    1.5.0 | 2026-03-15 | Added Profile APIs: `POST /v1/profile/person` to fetch LinkedIn person profile by profile URL (positions, educations, skills, etc.), and `POST /v1/profile/company` to fetch LinkedIn company profile by company URL (industries, specialities, staff count, etc.). Both endpoints consume credits and return `credits_available` and `credits_consumed` in the response.
+  version: 1.6.0
+  contact:
+    email: dev@finalscout.com
+    name: FinalScout APIs Support
+  x-logo:
+    url: https://finalscout.com/public/icons/logo-text.png
+    altText: FinalScout logo
+servers:
+  - url: 'https://api.finalscout.com'
+tags:
+  - name: Profile
+    description: |
+      APIs for fetching LinkedIn person and company profile data. Each successful request consumes credits: standard rate is 0.5 credit per person or company profile; accounts with a custom agreed rate use that rate instead. See **API cost** in the document introduction for details.
+components:
+  securitySchemes:
+    api_key_auth:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: |
+        Submit authentication details by Header method:
+          > 1. Get `API Key` from [API Setting](https://finalscout.com/app/api/settings).
+          > 2. Set `API Key` to request header `Authorization`.
+  schemas:
+    CreditsLimitObject:
+      type: object
+      description: Credits limit response.
+      properties:
+        credits_required:
+          type: number
+          description: Credits required for this task (standard Profile API rate is 0.5 credit per request unless your account has a custom rate).
+        credits_available:
+          type: number
+          minimum: -1
+          description: Credits remaining in your account.
+    PersonProfileEducation:
+      type: object
+      description: A single education entry.
+      properties:
+        company_linkedin_id:
+          type: integer
+          description: LinkedIn organization/school ID for the institution.
+        degree:
+          type: string
+          description: Degree name (e.g. Master of Science - MS).
+        ended_on:
+          type: string
+          description: End date in YYYY-MM format.
+        field_of_study:
+          type: string
+          description: Field of study or major.
+        school_name:
+          type: string
+          description: Name of the school or institution.
+        school_linkedin_id:
+          type: integer
+          description: LinkedIn ID of the school.
+        school_logo:
+          type: string
+          description: School logo image URL.
+        school_url:
+          type: string
+          description: LinkedIn URL for the school.
+        started_on:
+          type: string
+          description: Start date in YYYY-MM format.
+    PersonProfilePosition:
+      type: object
+      description: A single position/employment entry.
+      properties:
+        company_linkedin_id:
+          type: integer
+          description: LinkedIn company ID.
+        company_linkedin_public_id:
+          type: string
+          description: Company's public URL slug on LinkedIn (e.g. join-raisin).
+        company_name:
+          type: string
+          description: Company name.
+        company_logo:
+          type: string
+          description: Company logo image URL.
+        company_website:
+          type: string
+          description: Company website URL.
+        employment_type:
+          type: string
+          description: Type of employment (e.g. Full-time, Contract, Internship).
+        ended_on:
+          type: string
+          description: End date in YYYY-MM format; empty string if currently employed.
+        location:
+          type: string
+          description: Job location.
+        started_on:
+          type: string
+          description: Start date in YYYY-MM format.
+        title:
+          type: string
+          description: Job title.
+    PersonProfileCertification:
+      type: object
+      description: A single certification entry.
+      properties:
+        authority:
+          type: string
+          description: Issuing authority or organization.
+        company_linkedin_id:
+          type: integer
+          description: LinkedIn ID of the issuing organization.
+        company_linkedin_public_id:
+          type: string
+          description: Public URL slug of the issuing organization on LinkedIn.
+        company_logo:
+          type: string
+          description: Logo URL of the issuing organization.
+        company_name:
+          type: string
+          description: Name of the issuing organization.
+        display_source:
+          type: string
+          description: Display source URL.
+        ended_on:
+          type: string
+          description: Expiration date in YYYY-MM format.
+        license_number:
+          type: string
+          description: License or credential number.
+        name:
+          type: string
+          description: Certification name.
+        started_on:
+          type: string
+          description: Issue date in YYYY-MM format.
+        url:
+          type: string
+          description: Credential URL.
+    PersonProfileVolunteerExperience:
+      type: object
+      description: A single volunteer experience entry.
+      properties:
+        cause:
+          type: string
+          description: Cause category (e.g. HUMANITARIAN_RELIEF).
+        company_linkedin_id:
+          type: integer
+          description: LinkedIn ID of the organization.
+        company_linkedin_public_id:
+          type: string
+          description: Public URL slug of the organization on LinkedIn.
+        company_logo:
+          type: string
+          description: Organization logo URL.
+        company_name:
+          type: string
+          description: Organization name.
+        ended_on:
+          type: string
+          description: End date in YYYY-MM format.
+        role:
+          type: string
+          description: Volunteer role or title.
+        started_on:
+          type: string
+          description: Start date in YYYY-MM format.
+    PersonProfile:
+      type: object
+      description: Person profile details.
+      properties:
+        avatar:
+          type: string
+          description: Profile picture/avatar image URL.
+        awards:
+          type: array
+          description: List of awards.
+          items:
+            type: object
+        birth_date:
+          type: string
+          description: Birth date if available.
+        certifications:
+          type: array
+          description: List of certifications.
+          items:
+            $ref: '#/components/schemas/PersonProfileCertification'
+        city:
+          type: string
+          description: City.
+        country:
+          type: string
+          description: Country.
+        courses:
+          type: array
+          description: List of courses.
+          items:
+            type: object
+        creator:
+          type: boolean
+          description: Whether the person is a LinkedIn creator.
+        educations:
+          type: array
+          description: List of education entries.
+          items:
+            $ref: '#/components/schemas/PersonProfileEducation'
+        firstname:
+          type: string
+          description: First name.
+        full_name:
+          type: string
+          description: Full name.
+        headline:
+          type: string
+          description: Profile headline or one-line summary.
+        hiring:
+          type: boolean
+          description: Whether the person is currently hiring.
+        industries:
+          type: array
+          description: List of industries.
+          items:
+            type: string
+        influencer:
+          type: boolean
+          description: Whether the person is a LinkedIn influencer.
+        languages:
+          type: array
+          description: List of languages spoken.
+          items:
+            type: string
+        last_name:
+          type: string
+          description: Last name.
+        linkedin_entity_urn:
+          type: string
+          description: LinkedIn entity URN (internal identifier).
+        linkedin_object_urn:
+          type: integer
+          description: LinkedIn object URN numeric part.
+        linkedin_public_id:
+          type: string
+          description: Public URL slug for the profile.
+        linkedin_url:
+          type: string
+          description: Full LinkedIn profile URL.
+        location:
+          type: string
+          description: Full location string (city, state, country, etc.).
+        middle_name:
+          type: string
+          description: Middle name if available.
+        open_to_work:
+          type: boolean
+          description: Whether the person has the "Open to Work" badge.
+        positions:
+          type: array
+          description: List of position/employment entries.
+          items:
+            $ref: '#/components/schemas/PersonProfilePosition'
+        premium:
+          type: boolean
+          description: Whether the person has a LinkedIn Premium account.
+        projects:
+          type: array
+          description: List of projects.
+          items:
+            type: object
+        publications:
+          type: array
+          description: List of publications.
+          items:
+            type: object
+        skills:
+          type: array
+          description: List of skills.
+          items:
+            type: string
+        state:
+          type: string
+          description: State or region.
+        summary:
+          type: string
+          description: Profile summary or "About" section.
+        title:
+          type: string
+          description: Current job title.
+        volunteer_experiences:
+          type: array
+          description: List of volunteer experiences.
+          items:
+            $ref: '#/components/schemas/PersonProfileVolunteerExperience'
+    ProfilePersonResponse:
+      type: object
+      description: Response body for the get person profile endpoint.
+      properties:
+        success:
+          type: boolean
+          description: Whether the request succeeded.
+        credits_available:
+          type: number
+          description: Remaining credits in your account.
+        credits_consumed:
+          type: number
+          description: Credits consumed for this request (typically 0.5 at standard rate; custom rates apply when agreed).
+        profile:
+          $ref: '#/components/schemas/PersonProfile'
+    CompanyProfileFundingRound:
+      type: object
+      description: Details about the last funding round.
+      properties:
+        funding_type:
+          type: string
+          description: Type of funding (e.g. SERIES_A, SERIES_UNKNOWN).
+        money_raised:
+          type: integer
+          description: Amount of money raised in the round.
+        announced_on:
+          type: string
+          format: date-time
+          description: Announcement date of the funding round.
+        lead_investors:
+          type: array
+          description: List of lead investors.
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Investor name.
+              logo:
+                type: string
+                description: Investor logo URL.
+              investor_url:
+                type: string
+                description: Crunchbase investor URL.
+        num_of_other_investors:
+          type: integer
+          description: Number of other investors in the round.
+        round_url:
+          type: string
+          description: Crunchbase URL for the funding round.
+    CompanyProfileFundingData:
+      type: object
+      description: Funding information for the company.
+      properties:
+        num_of_funding_rounds:
+          type: integer
+          description: Total number of funding rounds.
+        last_funding_round:
+          $ref: '#/components/schemas/CompanyProfileFundingRound'
+        organization_url:
+          type: string
+          description: Crunchbase organization URL.
+        funding_rounds_url:
+          type: string
+          description: Crunchbase URL listing all funding rounds.
+    CompanyProfile:
+      type: object
+      description: Company profile details.
+      properties:
+        city:
+          type: string
+          description: Company city.
+        country:
+          type: string
+          description: Country code (e.g. US).
+        description:
+          type: string
+          description: Company description or summary.
+        funding_data:
+          $ref: '#/components/schemas/CompanyProfileFundingData'
+        headline:
+          type: string
+          description: Company headline or tagline.
+        industries:
+          type: array
+          description: List of industries.
+          items:
+            type: string
+        linkedin_object_urn:
+          type: integer
+          description: LinkedIn company object URN numeric part.
+        linkedin_public_id:
+          type: string
+          description: Company's public URL slug on LinkedIn (e.g. microsoft).
+        linkedin_url:
+          type: string
+          description: Full LinkedIn company page URL.
+        logo:
+          type: string
+          description: Company logo image URL.
+        name:
+          type: string
+          description: Company name.
+        phone:
+          type: string
+          description: Company phone number.
+        postal_code:
+          type: string
+          description: Postal or ZIP code.
+        raw_address:
+          type: string
+          description: Raw address string.
+        specialities:
+          type: array
+          description: List of company specialities or focus areas.
+          items:
+            type: string
+        staff_count:
+          type: integer
+          description: Number of employees.
+        state:
+          type: string
+          description: State or region.
+        street_address:
+          type: string
+          description: Street address.
+        tags:
+          type: array
+          description: List of company-related tags.
+          items:
+            type: string
+        type:
+          type: string
+          description: Company type (e.g. Public Company, Privately Held).
+        website:
+          type: string
+          description: Company website URL.
+        year_founded:
+          type: integer
+          description: Year the company was founded.
+    ProfileCompanyResponse:
+      type: object
+      description: Response body for the get company profile endpoint.
+      properties:
+        success:
+          type: boolean
+          description: Whether the request succeeded.
+        credits_available:
+          type: number
+          description: Remaining credits in your account.
+        credits_consumed:
+          type: number
+          description: Credits consumed for this request (typically 0.5 at standard rate; custom rates apply when agreed).
+        profile:
+          $ref: '#/components/schemas/CompanyProfile'
+paths:
+  /v1/profile/person:
+    post:
+      tags:
+        - Profile
+      summary: Get LinkedIn person profile
+      description: Fetch detailed profile data for a LinkedIn person by their profile URL, including positions, educations, skills, certifications, volunteer experiences, and more. Set `extended` to `true` for the full profile or omit it (defaults to `false`) for a basic profile at a lower credit cost.
+      security:
+        - api_key_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - linkedin_url
+              properties:
+                linkedin_url:
+                  type: string
+                  description: Required. LinkedIn person profile URL (e.g. https://www.linkedin.com/in/username).
+                extended:
+                  type: boolean
+                  default: false
+                  description: Optional. If `false` (default), returns a basic LinkedIn profile at a lower credit cost. If `true`, returns the full LinkedIn profile at the standard rate. Contact your account manager for pricing details.
+              example:
+                linkedin_url: "https://www.linkedin.com/in/johndoe"
+                extended: false
+      responses:
+        '200':
+          description: Indicates the request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePersonResponse'
+              examples:
+                basic:
+                  summary: Basic person profile (extended=false, default)
+                  description: When `extended` is `false` (the default), a basic person profile is returned at a lower credit cost.
+                  value:
+                    credits_available: 964681.1
+                    credits_consumed: 0.4
+                    success: true
+                    profile:
+                      avatar: ""
+                      birth_date: ""
+                      city: ""
+                      country: "United States"
+                      creator: true
+                      educations:
+                        - degree: "Bachelor's degree"
+                          ended_on: "2009"
+                          field_of_study: "Sociology"
+                          school_linkedin_id: 11421
+                          school_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1631375150258"
+                          school_name: "Pacific State University"
+                          school_url: "https://www.linkedin.com/school/pacific-state-university/"
+                          started_on: "2005"
+                        - degree: "Bachelor's degree"
+                          ended_on: "2009"
+                          field_of_study: "Economics"
+                          school_linkedin_id: 11421
+                          school_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1631375150258"
+                          school_name: "Pacific State University"
+                          school_url: "https://www.linkedin.com/school/pacific-state-university/"
+                          started_on: "2006"
+                      firstname: "John"
+                      full_name: "John Smith"
+                      headline: "Email verification innovator | Co-founder @TechVerify.com"
+                      hiring: false
+                      industries:
+                        - "Computer Software"
+                      influencer: false
+                      last_name: "Smith"
+                      linkedin_entity_urn: "ACoAAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      linkedin_object_urn: 10000001
+                      linkedin_public_id: "johnsmith"
+                      linkedin_url: "https://www.linkedin.com/in/johnsmith"
+                      location: "United States"
+                      middle_name: ""
+                      open_to_work: false
+                      positions:
+                        - company_linkedin_id: 91172130
+                          company_linkedin_public_id: "techverify"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1681517764174"
+                          company_name: "TechVerify (Verify risky emails without sending messages)"
+                          ended_on: ""
+                          location: ""
+                          started_on: "2022-01"
+                          title: "Co-Founder"
+                        - company_linkedin_id: 18628583
+                          company_linkedin_public_id: "mediatip"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1631406579433"
+                          company_name: "MediaTip"
+                          ended_on: ""
+                          location: "San Francisco"
+                          started_on: "2014"
+                          title: "Co-Founder"
+                        - company_linkedin_id: 14575727
+                          company_linkedin_public_id: "coverageapp"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630611984662"
+                          company_name: "CoverageApp"
+                          ended_on: ""
+                          location: "San Francisco"
+                          started_on: "2018-11"
+                          title: "Co-Founder"
+                      premium: false
+                      skills: null
+                      state: ""
+                      summary: "Co-founder of a growing list of SaaS products including tools for PR professionals, journalist outreach, automated coverage reporting, and most recently an email verification service focused on solving the catchall problem."
+                      title: "Email verification innovator | Co-founder @TechVerify.com"
+                full:
+                  summary: Full person profile (extended=true)
+                  description: When `extended` is `true`, the full person profile is returned at the standard rate.
+                  value:
+                    credits_available: 10250.5
+                    credits_consumed: 0.5
+                    success: true
+                    profile:
+                      avatar: "https://media.licdn.com/dms/image/v2/example/profile-displayphoto-shrink_800_800/0/1686902177397"
+                      awards: []
+                      birth_date: ""
+                      certifications:
+                        - authority: "Global Consulting Group"
+                          company_name: ""
+                          display_source: ""
+                          ended_on: ""
+                          license_number: ""
+                          name: "ISO 9001:2015 Internal Auditor"
+                          started_on: "2024-07"
+                          url: ""
+                        - authority: "National Professional Certification Board"
+                          company_linkedin_id: 14627559
+                          company_linkedin_public_id: "national-certification-board"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630625019715"
+                          company_name: "National Professional Certification Board"
+                          display_source: ""
+                          ended_on: ""
+                          license_number: ""
+                          name: "Senior Recruitment & Selection Analyst"
+                          started_on: "2022-09"
+                          url: ""
+                        - authority: "University Computing Development Institute"
+                          company_linkedin_id: 14725181
+                          company_linkedin_public_id: "university-computing-institute"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630580476989"
+                          company_name: "University Computing Development Institute"
+                          display_source: ""
+                          ended_on: ""
+                          license_number: ""
+                          name: "Certified SPSS for Psychology"
+                          started_on: "2021-05"
+                          url: ""
+                      city: "Jakarta"
+                      country: "Indonesia"
+                      courses: []
+                      creator: false
+                      educations:
+                        - degree: "Bachelor's degree"
+                          ended_on: "2021-09"
+                          field_of_study: "Psychology"
+                          school_linkedin_id: 15093610
+                          school_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1698501697303"
+                          school_name: "State University of Jakarta"
+                          school_url: "https://www.linkedin.com/school/state-university-jakarta/"
+                          started_on: "2017-08"
+                      firstname: "Jane"
+                      full_name: "Jane Doe"
+                      headline: "Human Resources | Recruitment Specialist | HR Recruitment | Human Resources Generalist"
+                      hiring: false
+                      industries:
+                        - "Consumer Goods"
+                      influencer: false
+                      languages: []
+                      last_name: "Doe"
+                      linkedin_entity_urn: "ACoAADfCOmABxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      linkedin_object_urn: 100000001
+                      linkedin_public_id: "janedoe"
+                      linkedin_url: "https://www.linkedin.com/in/janedoe"
+                      location: "Jakarta, Jakarta, Indonesia"
+                      middle_name: ""
+                      open_to_work: true
+                      positions:
+                        - company_linkedin_id: 82549809
+                          company_linkedin_public_id: "pt-acme-corp"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1660286350779"
+                          company_name: "PT Acme Corporation"
+                          company_website: "https://acmecorp.example.com"
+                          employment_type: "Contract"
+                          ended_on: ""
+                          location: "Jakarta, Jakarta, Indonesia"
+                          started_on: "2024-05"
+                          title: "Human Resources Specialist"
+                        - company_name: "PT Global Medical Services"
+                          employment_type: "Contract"
+                          ended_on: "2024-04"
+                          location: "Jakarta, Jakarta, Indonesia"
+                          started_on: "2023-01"
+                          title: "HR Recruitment Staff"
+                        - company_linkedin_id: 77122500
+                          company_linkedin_public_id: "talent-solutions-id"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1637568413756"
+                          company_name: "PT Talent Solutions Indonesia"
+                          company_website: "https://talentsolutions.example.com"
+                          employment_type: "Internship"
+                          ended_on: "2022-10"
+                          location: "Jakarta, Jakarta, Indonesia"
+                          started_on: "2022-06"
+                          title: "HR Recruitment"
+                        - company_linkedin_id: 71012199
+                          company_linkedin_public_id: "pt-digital-media"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630654130974"
+                          company_name: "PT Digital Media Communications"
+                          company_website: "https://digitalmedia.example.com"
+                          employment_type: "Internship"
+                          ended_on: "2022-06"
+                          location: "Jakarta, Jakarta, Indonesia"
+                          started_on: "2022-04"
+                          title: "Recruiter Internship"
+                        - company_linkedin_id: 13328377
+                          company_linkedin_public_id: "freshfruit-id"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630669441587"
+                          company_name: "PT Fresh Fruit Nusantara"
+                          company_website: "https://freshfruit.example.com"
+                          employment_type: "Internship"
+                          ended_on: "2021-12"
+                          location: "Jakarta, Jakarta, Indonesia"
+                          started_on: "2021-11"
+                          title: "Recruitment Internship"
+                      premium: false
+                      projects: []
+                      publications: []
+                      skills:
+                        - "Microsoft Outlook"
+                        - "Social Media Measurement"
+                        - "Administrative Assistance"
+                        - "End to End Recruitments"
+                        - "Salary Negotiations"
+                        - "Interviewing"
+                        - "Microsoft Office"
+                        - "Microsoft Excel"
+                        - "Microsoft Word"
+                        - "Microsoft PowerPoint"
+                        - "IBM SPSS Statistics"
+                        - "Psychological Test Administration"
+                        - "Problem Solving"
+                        - "Analytical Skills"
+                        - "Human Resources (HR)"
+                        - "Communication"
+                        - "Teamwork"
+                        - "Hiring"
+                        - "Recruiting"
+                        - "IT Recruitment"
+                      state: "Jakarta"
+                      summary: "Psychology graduate with over three years of experience in Human Resources, particularly in Talent Acquisition and Recruitment. Passionate about connecting the right people with the right opportunities and creating a positive employee experience.\n\nExperience handling end-to-end recruitment processes and utilizing various psychological assessment tools such as DISC, IST, and Papikostik.\n\nKnown as a fast learner, energetic, and approachable professional who enjoys working both independently and in teams."
+                      title: "Human Resources Specialist"
+                      volunteer_experiences:
+                        - cause: "HUMANITARIAN_RELIEF"
+                          company_linkedin_id: 431410
+                          company_linkedin_public_id: "charity-foundation"
+                          company_logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630565764184"
+                          company_name: "Charity Foundation Indonesia"
+                          ended_on: "2021-12"
+                          role: "Volunteer"
+                          started_on: "2019-01"
+        '400':
+          description: Invalid parameter.
+        '401':
+          description: Authorization information is missing or invalid.
+        '403':
+          description: Insufficient credits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditsLimitObject'
+        '405':
+          description: The account is blocked.
+        '429':
+          description: Rate limited.
+        '500':
+          description: Unexpected error.
+
+  /v1/profile/company:
+    post:
+      tags:
+        - Profile
+      summary: Get LinkedIn company profile
+      description: Fetch detailed profile data for a LinkedIn company by its profile URL, including industries, specialities, staff count, funding data, and more.
+      security:
+        - api_key_auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - linkedin_url
+              properties:
+                linkedin_url:
+                  type: string
+                  description: Required. LinkedIn company profile URL (e.g. https://www.linkedin.com/company/company-name).
+              example:
+                linkedin_url: "https://www.linkedin.com/company/acme-tech"
+      responses:
+        '200':
+          description: Indicates the request is successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileCompanyResponse'
+              example:
+                credits_available: 10251.5
+                credits_consumed: 0.5
+                success: true
+                profile:
+                  city: "New York"
+                  country: "US"
+                  description: "An AI-powered software platform that helps brands acquire, analyze, and activate first-party data across every sales channel. Reclaim customer data lost to retail & marketplaces and drive revenue through mobile-optimized experiences.\n\n"
+                  funding_data:
+                    num_of_funding_rounds: 3
+                    last_funding_round:
+                      funding_type: "SERIES_UNKNOWN"
+                      money_raised: 8000000
+                      announced_on: "2025-06-24T00:00:00Z"
+                      lead_investors:
+                        - name: "Alpha Ventures Capital"
+                          logo: "https://media.licdn.com/dms/image/sync/v2/example/crunchbase_investor_logo_100/0/1751081445847"
+                          investor_url: "https://www.crunchbase.com/organization/alpha-ventures-capital"
+                        - name: "Beta Growth Investments"
+                          logo: "https://media.licdn.com/dms/image/sync/v2/example/crunchbase_investor_logo_100/0/1751081445802"
+                          investor_url: "https://www.crunchbase.com/organization/beta-growth-investments"
+                      num_of_other_investors: 5
+                      round_url: "https://www.crunchbase.com/funding_round/example-series-unknown--49072cb5"
+                    organization_url: "https://www.crunchbase.com/organization/example-company"
+                    funding_rounds_url: "https://www.crunchbase.com/organization/example-company/funding_rounds/funding_rounds_list"
+                  headline: "Bridging the offline & the online. Acquire, analyze, and activate first-party data across every sales channel."
+                  industries:
+                    - "Software Development"
+                  linkedin_object_urn: 71542577
+                  linkedin_public_id: "acme-tech"
+                  linkedin_url: "https://www.linkedin.com/company/acme-tech"
+                  logo: "https://media.licdn.com/dms/image/v2/example/company-logo_400_400/0/1630499982781"
+                  name: "Acme Tech"
+                  phone: "(555) 123-4567"
+                  postal_code: "10001"
+                  raw_address: "100 Main Street"
+                  specialities:
+                    - "Software"
+                    - "Brands"
+                    - "Marketing"
+                    - "Retail"
+                    - "Omnichannel"
+                    - "Amazon"
+                    - "Ecommerce"
+                    - "Shopify"
+                  staff_count: 64
+                  state: "New York"
+                  street_address: ""
+                  tags:
+                    - "omnichannel"
+                    - "ecommerce"
+                    - "retail"
+                  type: "Privately Held"
+                  website: "https://www.acmetech.example.com/"
+                  year_founded: 2020
+        '400':
+          description: Invalid parameter.
+        '401':
+          description: Authorization information is missing or invalid.
+        '403':
+          description: Insufficient credits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditsLimitObject'
+        '405':
+          description: The account is blocked.
+        '429':
+          description: Rate limited.
+        '500':
+          description: Unexpected error.
