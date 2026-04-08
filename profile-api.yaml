@@ -483,7 +483,7 @@ paths:
               properties:
                 linkedin_url:
                   type: string
-                  description: Required. LinkedIn person profile URL (e.g. https://www.linkedin.com/in/username).
+                  description: Required. LinkedIn person profile URL (e.g. `https://www.linkedin.com/in/username`, or `https://www.linkedin.com/in/ACoAAA8BYqEBCGLg_vT_ca6mMEqkpp9nVffJ3hc`).
                 extended:
                   type: boolean
                   default: false
